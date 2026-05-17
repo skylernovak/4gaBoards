@@ -168,3 +168,19 @@ The agent verified the GitHub MCP by reading the authenticated GitHub account co
 ### My Decision
 
 I documented the MCP servers because they are part of the practical AI-assisted QA workflow for this take-home. Browser-side verification and repo-aware tooling are useful supporting capabilities, but I treated them as instrumentation for exploration and validation rather than as evidence of product changes.
+
+---
+
+## 10. Selector Hardening and Headed Verification
+
+### Prompt Used
+
+Implement the fix for `deleteUserByEmail`, then run both existing Playwright specs again in headed mode with one worker.
+
+### AI Output Summary
+
+The agent traced the failing cleanup path to a brittle delete locator that used an exact title selector for `Delete User` even though the rendered control exposed `Delete user`. It recommended switching to role-based lookup, scoping the action to the opened dialog, and rerunning the suite serially in headed mode for clearer verification.
+
+### My Refinement
+
+I accepted the minimal fix because it removed an avoidable selector risk without broadening test scope. Running the suite with one worker in headed mode confirmed the existing login and add-user specs both pass, which is stronger evidence than the earlier parallel run where cleanup failed after the main workflow had already succeeded.
