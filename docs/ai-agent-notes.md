@@ -4,6 +4,19 @@
 
 Use AI agents to accelerate project exploration, E2E test planning, Playwright implementation, and test stabilization for the 4ga Boards take-home exercise.
 
+## AI Agent Skills and Tools Used
+
+| Skill / Tool | Source | Purpose | Why I Used It |
+|---|---|---|---|
+| `qa-test-planner` | `skills.sh` / `softaworks/agent-toolkit` | Test plan review and prioritization | Helped structure P0/P1/P2 coverage and validate scope against the assignment |
+| `playwright-best-practices` | `skills.sh` / `currents-dev/playwright-best-practices-skill` | Playwright implementation guidance | Used to keep tests robust, avoid brittle selectors, and prefer reliable waits |
+| `webapp-testing` | `skills.sh` / `anthropics/skills` | Local app and UI exploration | Useful for inspecting rendered behavior and validating automation assumptions |
+| `playwright-cli` | `skills.sh` / `microsoft/playwright-cli` | Browser reconnaissance and locator discovery | Useful for quick snapshots, UI inspection, and exploratory interaction when needed |
+| `Playwright MCP` | Local MCP server | Browser automation and runtime verification | Used to confirm browser tooling was operational and available for local app inspection and UI-driven debugging |
+| `GitHub MCP` | Local MCP server | Repository and pull request access | Used to confirm GitHub integration was operational for repo-aware workflow support without leaving the Codex environment |
+| `skill-creator` | `skills.sh` / `anthropics/skills` | Custom skill creation | Used to create the notes-updater workflow skill and align it with Codex |
+| `ai-agent-notes-updater` | Local project skill | Documentation maintenance | Ensures AI usage notes are updated after meaningful project milestones |
+
 ## 1. Project Exploration
 
 ### Prompt Used
@@ -139,3 +152,19 @@ The agent copied the finalized markdown test plan into the project-level `TEST_P
 ### My Decision
 
 I promoted the finalized plan into the repository so the submission branch contains the required test plan artifact alongside the Playwright tests and AI usage documentation.
+
+---
+
+## 9. MCP Tooling Verification
+
+### Prompt Used
+
+Confirm whether the Playwright and GitHub MCP servers are operational, then document that these MCPs are also part of the project workflow.
+
+### AI Output Summary
+
+The agent verified the GitHub MCP by reading the authenticated GitHub account context and verified the Playwright MCP by listing the active browser session. It also checked repository state to confirm that these health checks did not require code changes or operational setup commits.
+
+### My Decision
+
+I documented the MCP servers because they are part of the practical AI-assisted QA workflow for this take-home. Browser-side verification and repo-aware tooling are useful supporting capabilities, but I treated them as instrumentation for exploration and validation rather than as evidence of product changes.
