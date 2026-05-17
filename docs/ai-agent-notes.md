@@ -232,3 +232,19 @@ The agent created `card-lifecycle.spec.ts` to cover opening a card, renaming it,
 ### My Refinement
 
 I kept the lifecycle test user-oriented instead of API-oriented, even though some selectors required careful scoping, because the take-home is stronger when it demonstrates that the visible card modal and move/delete flows actually work. The final checkpoint was the most important one: rerunning the full suite and confirming `addUser.spec.ts`, `auth.spec.ts`, `board-creation.spec.ts`, and `card-lifecycle.spec.ts` all pass together, which means the planned MVP coverage is now implemented end-to-end.
+
+---
+
+## 14. GitHub Actions E2E CI
+
+### Prompt Used
+
+Add a functional, maintainable GitHub Actions workflow that runs the Playwright E2E smoke tests against the app in CI, using the existing project structure and keeping the solution lightweight, debuggable, and appropriate for a small team.
+
+### AI Output Summary
+
+The agent inspected the repository before proposing CI details and confirmed that the project uses `pnpm`, the checked-in app starts with `pnpm start`, the Playwright base URL is `http://localhost:3000`, the test directory is `tests/e2e/specs`, and there were no existing `@smoke` tags to filter on. It also found an older workflow that only ran on a narrower trigger set and mutated dependencies in CI, so the new implementation replaced that with a single `playwright.yml` workflow that uses concurrency cancellation, installs pinned toolchain versions, starts Postgres with `docker-compose-dev.yml`, seeds the database, starts the local app, waits for readiness with `start-server-and-test`, uploads Playwright artifacts, and writes a concise job summary.
+
+### My Refinement
+
+I deliberately chose the local app startup path over the production-style `docker-compose.yml` image because the point of this stretch deliverable is to validate the same checked-out code reviewers will inspect, not just a prebuilt container. I also kept the workflow intentionally narrow by running the core MVP specs when `@smoke` tags are absent, avoiding a premature browser matrix or sharding strategy, and validating locally with YAML parsing, formatting checks, and a full serial Playwright run before treating the CI workflow as ready for GitHub-side verification.

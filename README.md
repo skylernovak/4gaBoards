@@ -175,6 +175,21 @@ Default 4ga Boards url: http://localhost:3000 \
 Default user: `demo`\
 Default password: `demo`
 
+## E2E CI
+
+The Playwright GitHub Actions workflow lives at `.github/workflows/playwright.yml`.
+
+It uses the existing local-app development path rather than the published Docker image:
+
+- starts PostgreSQL with `docker compose -f docker-compose-dev.yml up -d --wait`
+- copies `server/.env.sample` to `server/.env`
+- initializes the database with `pnpm server:db:init`
+- starts the app with `pnpm start`
+- waits for `http://localhost:3000`
+- runs `@smoke` tests when tags exist, otherwise runs the core MVP specs
+
+The workflow uploads the Playwright HTML report and `tests/test-results` artifacts on every run for debugging.
+
 ## Web Server Configuration
 
 [Web Server Configuration](https://docs.4gaboards.com/docs/dev/web-server-config)
@@ -212,4 +227,3 @@ Default password: `demo`
 
 [![RARgames](https://github.com/RARgames.png?size=100)](https://github.com/RARgames)
 [![wilkobyl](https://github.com/wilkobyl.png?size=100)](https://github.com/wilkobyl)
-
