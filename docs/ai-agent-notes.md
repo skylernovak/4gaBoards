@@ -184,3 +184,51 @@ The agent traced the failing cleanup path to a brittle delete locator that used 
 ### My Refinement
 
 I accepted the minimal fix because it removed an avoidable selector risk without broadening test scope. Running the suite with one worker in headed mode confirmed the existing login and add-user specs both pass, which is stronger evidence than the earlier parallel run where cleanup failed after the main workflow had already succeeded.
+
+---
+
+## 11. First Planned Spec Implementation
+
+### Prompt Used
+
+Implement the first Playwright spec from the test plan and align the suite structure with the planned `auth.spec.ts` entry point.
+
+### AI Output Summary
+
+The agent followed a test-first path by creating `auth.spec.ts` before the shared helper existed, verifying the expected failure, then adding a small `loginAsAdmin(page)` helper under `tests/e2e/helpers/auth.ts`. After the new spec passed, it removed the older duplicate `login.spec.ts` and reran the suite to confirm the planned auth spec and the existing add-user coverage both stayed green.
+
+### My Refinement
+
+I kept the implementation deliberately small because the main value at this stage is aligning the repository with the test plan without introducing a large abstraction layer. Extracting only the login helper shows stronger SDET judgment than building a framework early, and replacing the legacy login file avoids carrying duplicate smoke coverage as the real MVP specs are added.
+
+---
+
+## 12. Board Creation MVP Flow
+
+### Prompt Used
+
+Proceed with the board creation specs from the test plan and implement the P0 project, board, list, card, and persistence path.
+
+### AI Output Summary
+
+The agent used a test-first approach again by creating `board-creation.spec.ts` before the shared test-data helper existed, verifying the expected module failure, then adding a minimal `uniqueName(prefix)` helper under `tests/e2e/helpers/testData.ts`. It combined code inspection with Playwright MCP reconnaissance to confirm the real `Add Project`, `Add Board`, `Add list`, and `Add card` controls, the English placeholders, and the actual route transitions after project and board creation. The resulting spec covers project creation, board creation, three workflow lists, card creation in the target list, and reload persistence.
+
+### My Refinement
+
+I accepted a small amount of selector pragmatism where the UI does not expose clean semantic containers, such as scoping a list via its titled header and nearest list wrapper, because that is still materially better than using positional selectors or arbitrary waits. The final validation came from rerunning the full current suite and seeing `addUser.spec.ts`, `auth.spec.ts`, and `board-creation.spec.ts` all pass together, which is the right checkpoint before moving to card lifecycle coverage.
+
+---
+
+## 13. Card Lifecycle MVP Flow
+
+### Prompt Used
+
+Proceed with the next set of tests and implement the card lifecycle spec from the plan.
+
+### AI Output Summary
+
+The agent created `card-lifecycle.spec.ts` to cover opening a card, renaming it, adding a description, moving it from `To Do` to `In Progress`, and deleting it with a post-refresh absence check. It reused the existing login and test-data helpers, created its own board fixture inside the spec, and then stabilized the flow by tightening selectors only where the live UI proved ambiguous. The key fixes were scoping the rename field to the modal title textarea, selecting the move destination from the dropdown item rather than the board column header, and scoping delete confirmation to the modal dialog rather than the header delete icon.
+
+### My Refinement
+
+I kept the lifecycle test user-oriented instead of API-oriented, even though some selectors required careful scoping, because the take-home is stronger when it demonstrates that the visible card modal and move/delete flows actually work. The final checkpoint was the most important one: rerunning the full suite and confirming `addUser.spec.ts`, `auth.spec.ts`, `board-creation.spec.ts`, and `card-lifecycle.spec.ts` all pass together, which means the planned MVP coverage is now implemented end-to-end.
