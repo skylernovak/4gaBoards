@@ -248,3 +248,35 @@ The agent inspected the repository before proposing CI details and confirmed tha
 ### My Refinement
 
 I deliberately chose the local app startup path over the production-style `docker-compose.yml` image because the point of this stretch deliverable is to validate the same checked-out code reviewers will inspect, not just a prebuilt container. I also kept the workflow intentionally narrow by running the core MVP specs when `@smoke` tags are absent, avoiding a premature browser matrix or sharding strategy, and validating locally with YAML parsing, formatting checks, and a full serial Playwright run before treating the CI workflow as ready for GitHub-side verification. Once the first GitHub run exposed real failures, I treated that as a workflow-hardening exercise rather than assuming the initial draft was enough: I disabled `deploy.yml` auto-runs by moving it to `workflow_dispatch` only for this fork, replaced `pnpm/action-setup` with a simpler Node 24 plus Corepack activation path, and removed the premature `setup-node` cache hook that expected `pnpm` to exist too early. I then reworked the workflow so reviewers can inspect the CI run like a real SDET pipeline: setup is explicit, the environment phase verifies the DB and app readiness, the suite is listed before execution, Playwright logs stream with the `line` reporter, and the final summary reports total, passed, failed, flaky, and skipped counts instead of only a generic success or failure state. I also agreed with the structural cleanup point on the tests themselves: page objects should own page-level interactions, while repeated multi-step scenario setup such as board/list/card creation belongs in shared helpers or fixtures so future specs can reuse it without copying orchestration logic.
+
+---
+
+## 15. Final Requirement Check and Handoff Readiness
+
+### Prompt Used
+
+Reference the original take-home PDF and evaluate the completed branch against the assignment requirements to determine how well the submission meets the expected bar.
+
+### AI Output Summary
+
+The agent decoded the one-page assignment PDF locally and extracted the core requirements: set up the chosen open-source project locally, identify one or two main features for E2E testing, develop a test plan with test cases, implement the cases using Playwright, and submit a branch containing the test plan, AI-agent markdown files, and Playwright tests. It then compared those requirements against the repository state and confirmed the presence of `TEST_PLAN.md`, `docs/ai-agent-notes.md`, four Playwright specs under `tests/e2e/specs`, shared helpers, and a working local validation path. It also noted that the CI workflow is a stretch deliverable that goes beyond the required submission set rather than substituting for any required artifact.
+
+### My Decision
+
+I consider the branch above the stated requirement bar. The core ask is fully met with a focused feature selection, a detailed and code-aware test plan, implemented Playwright coverage, and explicit AI-agent documentation. The added CI workflow strengthens the submission as a senior-level stretch deliverable because it demonstrates maintainability, debuggability, and ownership beyond the minimum without diluting the original assignment scope.
+
+---
+
+## 16. Lightweight Fixture Layer Refactor
+
+### Prompt Used
+
+Implement a proper but constrained Playwright fixture layer quickly, replacing repeated setup paths with shared fixtures while keeping the current suite green and avoiding a heavy framework rewrite.
+
+### AI Output Summary
+
+The agent introduced a shared custom `test` wrapper under `tests/e2e/fixtures/test.ts` with three typed fixtures: `adminPage` for authenticated navigation, `boardData` for reusable unique board/card naming, and `boardWithCard` for lifecycle tests that need a prebuilt board state. It also split the existing board helper so `createBoardFixtureOnAuthenticatedPage()` can reuse an already logged-in page, migrated the current specs to the fixture layer, and kept the board-creation spec intentionally direct so it still proves the user-facing creation flow instead of hiding the behavior inside a fixture.
+
+### My Refinement
+
+I kept this as a lightweight fixture layer rather than a full test framework because the current suite does not justify more abstraction than that. The most important validation was rerunning the full suite after the refactor and confirming all four specs still pass, which shows the fixtures improved reuse without weakening coverage or making the test flow harder to understand.

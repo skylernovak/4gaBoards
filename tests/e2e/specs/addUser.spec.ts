@@ -1,9 +1,7 @@
-import { test, expect } from '@playwright/test';
-import { LoginPage } from '../pageObjects/LoginPage';
+import { test, expect } from '../fixtures/test';
 import { UserSettingPage } from '../pageObjects/UserSettingPage';
 
-test('admin user can create a new user', async ({ page }) => {
-  const loginPage = new LoginPage(page);
+test('admin user can create a new user', async ({ adminPage: page }) => {
   const userSettingPage = new UserSettingPage(page);
   const createdUserEmails: string[] = [];
 
@@ -15,14 +13,6 @@ test('admin user can create a new user', async ({ page }) => {
   };
 
   try {
-    await test.step('Log in as admin', async () => {
-      await loginPage.navigateToLoginPage();
-      await expect(page).toHaveURL(loginPage.loginUrl);
-      await loginPage.loginToDashboard('demo', 'demo');
-      await expect(page).toHaveURL(loginPage.dashboardUrl);
-      await expect(loginPage.dashboardTitle).toBeVisible({ timeout: 15000 });
-    });
-
     await test.step('Navigate to users setting page', async () => {
       await userSettingPage.navigateToUsersSettingPage();
     });

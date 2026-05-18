@@ -1,23 +1,14 @@
-import { expect, test } from '@playwright/test';
-import { createBoardFixture, listWrapper } from '../helpers/boardFixture';
+import { test, expect } from '../fixtures/test';
+import { listWrapper } from '../helpers/boardFixture';
 import { uniqueName } from '../helpers/testData';
 
 const editCardNamePlaceholder = 'Enter card name...';
 const descriptionPlaceholder = 'Enter description...';
 const descriptionText = 'This card was created by Playwright to validate card detail persistence.';
 
-test('admin user can open, edit, move, and delete a card', async ({ page }) => {
-  const projectName = uniqueName('QE Lifecycle Project');
-  const boardName = uniqueName('QE Lifecycle Board');
-  const listTodo = uniqueName('To Do');
-  const listInProgress = uniqueName('In Progress');
-  const listDone = uniqueName('Done');
-  const cardTitle = uniqueName('Validate login behavior');
+test('admin user can open, edit, move, and delete a card', async ({ adminPage: page, boardWithCard }) => {
+  const { listTodo, listInProgress, cardTitle } = boardWithCard;
   const updatedCardTitle = uniqueName('Validate user authentication flow');
-
-  await test.step('Create the board fixture with one card', async () => {
-    await createBoardFixture(page, projectName, boardName, listTodo, listInProgress, listDone, cardTitle);
-  });
 
   await test.step('Open card details', async () => {
     await page.getByRole('button', { name: new RegExp(cardTitle) }).click();

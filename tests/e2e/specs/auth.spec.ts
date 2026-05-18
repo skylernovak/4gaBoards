@@ -1,11 +1,7 @@
-import { expect, test } from '@playwright/test';
-import { loginAsAdmin } from '../helpers/auth';
+import { expect, test } from '../fixtures/test';
 
-test('admin user logs in successfully', async ({ page }) => {
-  await page.goto('/login');
-  await loginAsAdmin(page);
-
-  await expect(page).toHaveURL('/');
-  await expect(page.locator("div[title='Dashboard']")).toBeVisible({ timeout: 15000 });
-  await expect(page.getByText(/invalid|incorrect/i)).toHaveCount(0);
+test('admin user logs in successfully', async ({ adminPage }) => {
+  await expect(adminPage).toHaveURL('/');
+  await expect(adminPage.locator("div[title='Dashboard']")).toBeVisible({ timeout: 15000 });
+  await expect(adminPage.getByText(/invalid|incorrect/i)).toHaveCount(0);
 });

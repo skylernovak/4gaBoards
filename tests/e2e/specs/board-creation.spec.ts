@@ -1,25 +1,13 @@
-import { expect, test } from '@playwright/test';
+import { test, expect } from '../fixtures/test';
 import { listWrapper } from '../helpers/boardFixture';
-import { loginAsAdmin } from '../helpers/auth';
-import { uniqueName } from '../helpers/testData';
 
 const projectNamePlaceholder = 'Enter project name...';
 const boardNamePlaceholder = 'Enter board name...';
 const listNamePlaceholder = 'Enter list name...';
 const cardNamePlaceholder = 'Enter card name... [Ctrl+Enter] - open';
 
-test('admin user can create project, board, lists, and card that persist after refresh', async ({ page }) => {
-  const projectName = uniqueName('QE E2E Project');
-  const boardName = uniqueName('QE Automation Board');
-  const listTodo = uniqueName('To Do');
-  const listInProgress = uniqueName('In Progress');
-  const listDone = uniqueName('Done');
-  const cardTitle = uniqueName('Validate login behavior');
-
-  await test.step('Log in as admin', async () => {
-    await page.goto('/login');
-    await loginAsAdmin(page);
-  });
+test('admin user can create project, board, lists, and card that persist after refresh', async ({ adminPage: page, boardData }) => {
+  const { projectName, boardName, listTodo, listInProgress, listDone, cardTitle } = boardData;
 
   await test.step('Create a new project', async () => {
     await page.getByRole('button', { name: 'Add Project' }).last().click();

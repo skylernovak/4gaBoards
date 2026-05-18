@@ -22,7 +22,7 @@ export function listWrapper(page: Page, listName: string) {
   return page.locator(`xpath=//div[@title=${xpathLiteral(listName)}]/ancestor::div[contains(@class, 'List_outerWrapper')][1]`);
 }
 
-export async function createBoardFixture(
+export async function createBoardFixtureOnAuthenticatedPage(
   page: Page,
   projectName: string,
   boardName: string,
@@ -31,9 +31,6 @@ export async function createBoardFixture(
   listDone: string,
   cardTitle: string,
 ): Promise<void> {
-  await page.goto('/login');
-  await loginAsAdmin(page);
-
   await page.getByRole('button', { name: 'Add Project' }).last().click();
   let dialog = page.getByRole('dialog');
   await dialog.getByPlaceholder(projectNamePlaceholder).fill(projectName);
@@ -66,4 +63,19 @@ export async function createBoardFixture(
   await todoList.getByPlaceholder(cardNamePlaceholder).fill(cardTitle);
   await todoList.getByPlaceholder(cardNamePlaceholder).press('Enter');
   await expect(todoList.locator(`div[title="${cardTitle}"]`)).toBeVisible();
+}
+
+export async function createBoardFixture(
+  page: Page,
+  projectName: string,
+  boardName: string,
+  listTodo: string,
+  listInProgress: string,
+  listDone: string,
+  cardTitle: string,
+): Promise<void> {
+  await page.goto('/login');
+  await loginAsAdmin(page);
+
+  await createBoardFixtureOnAuthenticatedPage(page, projectName, boardName, listTodo, listInProgress, listDone, cardTitle);
 }
