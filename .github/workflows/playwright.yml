@@ -23,61 +23,144 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout code
+      - name: 1. Setup | Checkout code
         uses: actions/checkout@v6.0.2
 
-      - name: Set up Node.js
+      - name: 1. Setup | Configure Node.js
         uses: actions/setup-node@v6.4.0
         with:
           node-version: 24.11.1
 
-      - name: Enable Corepack
+      - name: 1. Setup | Enable Corepack
         run: corepack enable
 
-      - name: Activate pnpm
+      - name: 1. Setup | Activate pnpm
         run: corepack prepare pnpm@11.1.2 --activate
 
-      - name: Show toolchain versions
+      - name: 1. Setup | Show toolchain versions
         run: |
           node --version
           pnpm --version
 
-      - name: Install dependencies
+      - name: 1. Setup | Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Install Playwright browsers
+      - name: 2. Environment | Install Playwright browsers
         run: pnpm -C tests exec playwright install --with-deps chromium
 
-      - name: Prepare database
+      - name: 2. Environment | Prepare database
         run: |
           docker compose -f docker-compose-dev.yml up -d --wait
           cp server/.env.sample server/.env
           pnpm server:db:init
 
-      - name: Select test command
+      - name: 2. Environment | Verify service prerequisites
+        run: |
+          test -f server/.env
+          docker compose -f docker-compose-dev.yml ps
+          echo "server/.env present and Docker services are running."
+
+      - name: 2. Environment | Select Playwright suite
         id: select_tests
         run: |
           if rg -n "@smoke" tests/e2e/specs > /dev/null; then
-            echo 'command=pnpm -C tests exec playwright test --grep "@smoke" --workers=1' >> "$GITHUB_OUTPUT"
+            echo 'run_command<<EOF' >> "$GITHUB_OUTPUT"
+            echo 'pnpm -C tests exec playwright test --grep "@smoke" --workers=1 --reporter=line,html,json' >> "$GITHUB_OUTPUT"
+            echo 'EOF' >> "$GITHUB_OUTPUT"
+            echo 'list_command<<EOF' >> "$GITHUB_OUTPUT"
+            echo 'pnpm -C tests exec playwright test --grep "@smoke" --workers=1 --list' >> "$GITHUB_OUTPUT"
+            echo 'EOF' >> "$GITHUB_OUTPUT"
             echo 'selection=@smoke-tagged Playwright tests' >> "$GITHUB_OUTPUT"
           else
-            echo 'command=pnpm -C tests exec playwright test e2e/specs/auth.spec.ts e2e/specs/board-creation.spec.ts e2e/specs/card-lifecycle.spec.ts --workers=1' >> "$GITHUB_OUTPUT"
+            echo 'run_command<<EOF' >> "$GITHUB_OUTPUT"
+            echo 'pnpm -C tests exec playwright test e2e/specs/auth.spec.ts e2e/specs/board-creation.spec.ts e2e/specs/card-lifecycle.spec.ts --workers=1 --reporter=line,html,json' >> "$GITHUB_OUTPUT"
+            echo 'EOF' >> "$GITHUB_OUTPUT"
+            echo 'list_command<<EOF' >> "$GITHUB_OUTPUT"
+            echo 'pnpm -C tests exec playwright test e2e/specs/auth.spec.ts e2e/specs/board-creation.spec.ts e2e/specs/card-lifecycle.spec.ts --workers=1 --list' >> "$GITHUB_OUTPUT"
+            echo 'EOF' >> "$GITHUB_OUTPUT"
             echo 'selection=core MVP E2E specs (auth, board creation, card lifecycle)' >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Start app and run Playwright smoke suite
-        id: run_tests
+      - name: 2. Environment | List targeted Playwright tests
+        run: |
+          echo "Selected suite: ${{ steps.select_tests.outputs.selection }}"
+          eval "${{ steps.select_tests.outputs.list_command }}"
+
+      - name: 2. Environment | Start application
+        id: start_app
         env:
           BROWSER: none
           CI: 'true'
         run: |
-          pnpm exec start-server-and-test "pnpm start" http://localhost:3000 "${{ steps.select_tests.outputs.command }}"
+          pnpm start > app.log 2>&1 &
+          APP_PID=$!
+          echo "app_pid=$APP_PID" >> "$GITHUB_OUTPUT"
+          echo "Started app with PID $APP_PID"
 
-      - name: Capture Docker logs
+      - name: 2. Environment | Wait for application readiness
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://localhost:3000 > /dev/null; then
+              echo "Application is reachable at http://localhost:3000 on attempt $attempt."
+              exit 0
+            fi
+            echo "Waiting for app readiness (attempt $attempt/60)..."
+            sleep 5
+          done
+          echo "Application did not become ready in time."
+          tail -n 200 app.log || true
+          exit 1
+
+      - name: 2. Environment | Verify application response
+        run: |
+          curl -I http://localhost:3000
+          echo "Application responded successfully."
+
+      - name: 3. Execute | Run Playwright tests
+        id: run_tests
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: playwright-results.json
+        run: |
+          eval "${{ steps.select_tests.outputs.run_command }}"
+
+      - name: 4. Results | Parse Playwright summary
         if: always()
-        run: docker compose -f docker-compose-dev.yml logs --no-color > docker-compose-dev.log
+        id: playwright_summary
+        run: |
+          node <<'NODE' >> "$GITHUB_OUTPUT"
+          const fs = require('fs');
+          const path = 'tests/playwright-results.json';
+          if (!fs.existsSync(path)) {
+            console.log('total=0');
+            console.log('passed=0');
+            console.log('failed=0');
+            console.log('flaky=0');
+            console.log('skipped=0');
+            console.log('report_found=false');
+            process.exit(0);
+          }
+          const report = JSON.parse(fs.readFileSync(path, 'utf8'));
+          const stats = report.stats || {};
+          const passed = Number(stats.expected || 0);
+          const failed = Number(stats.unexpected || 0);
+          const flaky = Number(stats.flaky || 0);
+          const skipped = Number(stats.skipped || 0);
+          const total = passed + failed + flaky + skipped;
+          console.log(`total=${total}`);
+          console.log(`passed=${passed}`);
+          console.log(`failed=${failed}`);
+          console.log(`flaky=${flaky}`);
+          console.log(`skipped=${skipped}`);
+          console.log('report_found=true');
+          NODE
 
-      - name: Upload Playwright HTML report
+      - name: 4. Results | Capture service logs
+        if: always()
+        run: |
+          docker compose -f docker-compose-dev.yml logs --no-color > docker-compose-dev.log
+          tail -n 200 app.log > app-tail.log || true
+
+      - name: 4. Results | Upload Playwright HTML report
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -86,42 +169,68 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-      - name: Upload Playwright test results
+      - name: 4. Results | Upload Playwright test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-test-results
-          path: tests/test-results/
+          path: |
+            tests/test-results/
+            tests/playwright-results.json
           if-no-files-found: ignore
           retention-days: 14
 
-      - name: Upload service logs
+      - name: 4. Results | Upload service logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ci-service-logs
-          path: docker-compose-dev.log
+          path: |
+            docker-compose-dev.log
+            app.log
+            app-tail.log
           if-no-files-found: ignore
           retention-days: 14
 
-      - name: Stop services
+      - name: 4. Results | Stop application and services
         if: always()
-        run: docker compose -f docker-compose-dev.yml down -v
+        run: |
+          if [ -n "${{ steps.start_app.outputs.app_pid }}" ]; then
+            kill "${{ steps.start_app.outputs.app_pid }}" || true
+          fi
+          docker compose -f docker-compose-dev.yml down -v
 
-      - name: Write job summary
+      - name: 4. Results | Write job summary
         if: always()
         run: |
           {
             echo '## Playwright CI'
             echo
-            echo "- Result: \`${{ steps.run_tests.outcome }}\`"
-            echo "- Package manager: \`pnpm\`"
-            echo "- Node version: \`24\`"
-            echo "- App startup: \`pnpm start\`"
+            echo '### Step 1. Setup'
+            echo "- Node version: \`24.11.1\`"
+            echo "- Package manager: \`pnpm 11.1.2 via corepack\`"
+            echo "- Dependency install: \`pnpm install --frozen-lockfile\`"
+            echo
+            echo '### Step 2. Environment'
             echo "- Database startup: \`docker compose -f docker-compose-dev.yml up -d --wait\`"
-            echo "- Readiness check: \`start-server-and-test\` waited for \`http://localhost:3000\`"
+            echo "- Database init: \`pnpm server:db:init\`"
+            echo "- Application startup: \`pnpm start\`"
+            echo "- Application URL: \`http://localhost:3000\`"
             echo "- Test selection: ${{ steps.select_tests.outputs.selection }}"
+            echo
+            echo '### Step 3. Playwright Execution'
+            echo "- Job result: \`${{ steps.run_tests.outcome }}\`"
             echo "- Playwright config: \`tests/playwright.config.ts\`"
+            echo "- Total: \`${{ steps.playwright_summary.outputs.total }}\`"
+            echo "- Passed: \`${{ steps.playwright_summary.outputs.passed }}\`"
+            echo "- Failed: \`${{ steps.playwright_summary.outputs.failed }}\`"
+            echo "- Flaky: \`${{ steps.playwright_summary.outputs.flaky }}\`"
+            echo "- Skipped: \`${{ steps.playwright_summary.outputs.skipped }}\`"
+            echo
+            echo '### Step 4. Results'
             echo "- Report artifact: \`playwright-report\`"
             echo "- Test artifact: \`playwright-test-results\`"
+            echo "- Service logs artifact: \`ci-service-logs\`"
+            echo
+            echo 'Playwright test output is streamed with the \`line\` reporter during execution, and the HTML report is uploaded as an artifact for detailed review.'
           } >> "$GITHUB_STEP_SUMMARY"
