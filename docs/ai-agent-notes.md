@@ -280,3 +280,19 @@ The agent introduced a shared custom `test` wrapper under `tests/e2e/fixtures/te
 ### My Refinement
 
 I kept this as a lightweight fixture layer rather than a full test framework because the current suite does not justify more abstraction than that. The most important validation was rerunning the full suite after the refactor and confirming all four specs still pass, which shows the fixtures improved reuse without weakening coverage or making the test flow harder to understand.
+
+---
+
+## 17. AI-Agent Deliverable Packaging
+
+### Prompt Used
+
+For the deliverable "Markdown files used to interact with AI agents," package the branch so reviewers can clearly see the relevant markdown artifacts, including the project instructions, skill usage evidence, and MCP-related notes.
+
+### AI Output Summary
+
+The agent reviewed the repository state, confirmed the branch was already clean and synced with `origin/snorkel-takehome`, and then checked whether the AI-agent deliverable was self-contained inside the repo. That review showed the branch already included `AGENTS.md`, `TEST_PLAN.md`, and this notes document, and that MCP usage was already documented here, but the project-specific skill definition still existed only in the local Codex skill workspace. The agent therefore added a repo-local artifact manifest and a snapshot of the `ai-agent-notes-updater` skill so reviewers can inspect the workflow instructions and milestone-note automation logic directly from the branch without relying on external local paths.
+
+### My Decision
+
+I wanted the deliverable to be reviewable from the repository itself rather than forcing the reviewer to infer which local AI-agent assets mattered. The right packaging choice was to keep the branch focused on the markdown artifacts that actually governed or documented the work, explicitly point to the MCP coverage already captured in these notes, and snapshot the custom project skill that was authored for this take-home rather than trying to vendor every third-party skill bundle into the repo.
