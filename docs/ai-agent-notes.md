@@ -21,11 +21,11 @@ Use AI agents to accelerate project exploration, E2E test planning, Playwright i
 
 ### Prompt Used
 
-I am testing the open-source project 4ga Boards. Review the project structure and identify the main user workflows that would make strong candidates for Playwright E2E tests. Focus on MVP product value and avoid brittle or environment-dependent features.
+I am testing the open-source project 4ga Boards. Review the project structure first, then identify the main user workflows that would make strong candidates for Playwright E2E tests. Focus on MVP product value, prefer flows with clear user-visible assertions, and avoid brittle or environment-dependent features.
 
 ### AI Output Summary
 
-The agent identified project/board/card creation and card lifecycle management as the strongest E2E candidates.
+The agent inspected the repository before narrowing scope and identified project/board/card creation and card lifecycle management as the strongest E2E candidates because they map directly to the product's visible core workflow.
 
 ### My Decision
 
@@ -47,15 +47,15 @@ Create an E2E test plan for 4ga Boards covering:
 - card movement
 - card deletion
 
-Include priority, preconditions, steps, expected results, and Playwright automation notes.
+Include priority, preconditions, steps, expected results, and Playwright automation notes. Keep the plan implementation-oriented, favor durable coverage over exhaustive edge cases, and call out where selector or environment risk may affect automation reliability.
 
 ### AI Output Summary
 
-The agent generated test cases covering the main happy paths and a small number of negative/destructive cases.
+The agent generated test cases covering the main happy paths and a small number of negative/destructive cases, with enough implementation detail to translate them into Playwright without pretending every low-value edge case belonged in the first pass.
 
 ### My Refinement
 
-I reduced scope to the highest-value P0/P1 cases to keep the implementation focused and reliable.
+I reduced scope to the highest-value P0/P1 cases to keep the implementation focused and reliable, and I kept the plan explicit about where automation stability mattered more than theoretical completeness.
 
 ---
 
@@ -111,15 +111,15 @@ I chose a milestone-based documentation workflow so AI usage is captured as part
 
 ### Prompt Used
 
-Review the drafted 4gaBoards Playwright E2E test plan against the original take-home PDF requirements and the actual application codebase. Use the Senior SDET review prompt from the draft, apply the QA test planning skill, and recommend improvements that make the plan more reliable, realistic, and code-aware.
+Review the drafted 4gaBoards Playwright E2E test plan against the original take-home PDF requirements and the actual application codebase. Use the Senior SDET review prompt from the draft, apply the QA test planning skill, challenge any generic assumptions that are not supported by the repo, and recommend improvements that make the plan more reliable, realistic, and code-aware.
 
 ### AI Output Summary
 
-The agent extracted the PDF requirements, confirmed the assignment scope, inspected the existing Playwright setup and 4gaBoards code paths, and recommended keeping the two-feature focus on project/board/list/card creation and card lifecycle management. It also identified repo-specific improvements, including using `demo/demo`, matching the actual `tests/e2e/specs` layout, preferring the app's Move Card menu over drag-and-drop, validating persistence with reload checks, and deferring lower-value flows such as attachments, SSO, and multi-user collaboration.
+The agent extracted the PDF requirements, confirmed the assignment scope, inspected the existing Playwright setup and 4gaBoards code paths, and recommended keeping the two-feature focus on project/board/list/card creation and card lifecycle management. It also challenged several generic plan assumptions and replaced them with repo-specific improvements, including using `demo/demo`, matching the actual `tests/e2e/specs` layout, preferring the app's Move Card menu over drag-and-drop, validating persistence with reload checks, and deferring lower-value flows such as attachments, SSO, and multi-user collaboration.
 
 ### My Refinement
 
-I used the review to produce a final draft that is grounded in tangible code rather than a generic Kanban test plan. The final version keeps the scope realistic for the take-home while showing stronger SDET judgment through prioritization, selector-risk mitigation, cleanup strategy, and implementation sequencing.
+I used the review to produce a final draft that is grounded in tangible code rather than a generic Kanban test plan. The final version keeps the scope realistic for the take-home while showing stronger SDET judgment through prioritization, selector-risk mitigation, cleanup strategy, and implementation sequencing, especially where the repo contradicted broader testing instincts.
 
 ---
 
@@ -207,15 +207,15 @@ I kept the implementation deliberately small because the main value at this stag
 
 ### Prompt Used
 
-Proceed with the board creation specs from the test plan and implement the P0 project, board, list, card, and persistence path.
+Proceed with the board creation specs from the test plan and implement the P0 project, board, list, card, and persistence path. Inspect the live UI and existing helpers before coding, prefer user-facing selectors, and only fall back to scoped structural locators where the product does not expose cleaner semantics.
 
 ### AI Output Summary
 
-The agent used a test-first approach again by creating `board-creation.spec.ts` before the shared test-data helper existed, verifying the expected module failure, then adding a minimal `uniqueName(prefix)` helper under `tests/e2e/helpers/testData.ts`. It combined code inspection with Playwright MCP reconnaissance to confirm the real `Add Project`, `Add Board`, `Add list`, and `Add card` controls, the English placeholders, and the actual route transitions after project and board creation. The resulting spec covers project creation, board creation, three workflow lists, card creation in the target list, and reload persistence.
+The agent used a test-first approach again by creating `board-creation.spec.ts` before the shared test-data helper existed, verifying the expected module failure, then adding a minimal `uniqueName(prefix)` helper under `tests/e2e/helpers/testData.ts`. It combined code inspection with Playwright MCP reconnaissance to confirm the real `Add Project`, `Add Board`, `Add list`, and `Add card` controls, the English placeholders, and the actual route transitions after project and board creation before settling on selector strategy. The resulting spec covers project creation, board creation, three workflow lists, card creation in the target list, and reload persistence.
 
 ### My Refinement
 
-I accepted a small amount of selector pragmatism where the UI does not expose clean semantic containers, such as scoping a list via its titled header and nearest list wrapper, because that is still materially better than using positional selectors or arbitrary waits. The final validation came from rerunning the full current suite and seeing `addUser.spec.ts`, `auth.spec.ts`, and `board-creation.spec.ts` all pass together, which is the right checkpoint before moving to card lifecycle coverage.
+I accepted a small amount of selector pragmatism where the UI does not expose clean semantic containers, such as scoping a list via its titled header and nearest list wrapper, because that is still materially better than using positional selectors or arbitrary waits. The final validation came from rerunning the full current suite and seeing `addUser.spec.ts`, `auth.spec.ts`, and `board-creation.spec.ts` all pass together, which confirmed that the tighter selector guidance still translated into durable coverage before moving to card lifecycle work.
 
 ---
 
@@ -239,15 +239,15 @@ I kept the lifecycle test user-oriented instead of API-oriented, even though som
 
 ### Prompt Used
 
-Add a functional, maintainable GitHub Actions workflow that runs the Playwright E2E smoke tests against the app in CI, using the existing project structure and keeping the solution lightweight, debuggable, and appropriate for a small team.
+Add a functional, maintainable GitHub Actions workflow that runs the Playwright E2E smoke tests against the app in CI, using the existing project structure and keeping the solution lightweight, debuggable, and appropriate for a small team. Reuse the repo's actual startup path, make failure points easy to inspect, and avoid unnecessary infrastructure complexity unless the branch already requires it.
 
 ### AI Output Summary
 
-The agent inspected the repository before proposing CI details and confirmed that the project uses `pnpm`, the checked-in app starts with `pnpm start`, the Playwright base URL is `http://localhost:3000`, the test directory is `tests/e2e/specs`, and there were no existing `@smoke` tags to filter on. It also found an older workflow that only ran on a narrower trigger set and mutated dependencies in CI, so the new implementation replaced that with a single `playwright.yml` workflow that uses concurrency cancellation, installs pinned toolchain versions, starts Postgres with `docker-compose-dev.yml`, seeds the database, starts the local app, waits for readiness, uploads Playwright artifacts, and writes a concise job summary. After the first push, the agent then reviewed the failed GitHub Actions runs and separated two distinct issues: the existing `deploy.yml` release workflow was still auto-triggering on branch pushes and trying to publish images to the upstream `ghcr.io/rargames/4gaboards` registry, while the new `Playwright CI` workflow failed first in `pnpm/action-setup` and then again when `actions/setup-node` tried to cache `pnpm` before `pnpm` existed on the runner. The latest revision also restructured the workflow into explicit setup, environment, execution, and results phases so the Actions UI exposes each condition and test stage clearly rather than hiding most of the work inside one combined command. It also renamed the visible job to `4gaBoards Playwright Tests`, expanded the fallback suite to include the existing `addUser.spec.ts`, and extracted the reusable board-setup flow into a shared helper module instead of keeping that setup embedded inside one spec.
+The agent inspected the repository before proposing CI details and confirmed that the project uses `pnpm`, the checked-in app starts with `pnpm start`, the Playwright base URL is `http://localhost:3000`, the test directory is `tests/e2e/specs`, and there were no existing `@smoke` tags to filter on. It also found an older workflow that only ran on a narrower trigger set and mutated dependencies in CI, so the new implementation replaced that with a single `playwright.yml` workflow that uses concurrency cancellation, installs pinned toolchain versions, starts Postgres with `docker-compose-dev.yml`, seeds the database, starts the local app, waits for readiness, uploads Playwright artifacts, and writes a concise job summary. After the first push, the agent then reviewed the failed GitHub Actions runs and separated two distinct issues: the existing `deploy.yml` release workflow was still auto-triggering on branch pushes and trying to publish images to the upstream `ghcr.io/rargames/4gaboards` registry, while the new `Playwright CI` workflow failed first in `pnpm/action-setup` and then again when `actions/setup-node` tried to cache `pnpm` before `pnpm` existed on the runner. The latest revision also restructured the workflow into explicit setup, environment, execution, and results phases so the Actions UI exposes each condition and test stage clearly rather than hiding most of the work inside one combined command, which matched the original goal of making failures inspectable rather than merely automated. It also renamed the visible job to `4gaBoards Playwright Tests`, expanded the fallback suite to include the existing `addUser.spec.ts`, and extracted the reusable board-setup flow into a shared helper module instead of keeping that setup embedded inside one spec.
 
 ### My Refinement
 
-I deliberately chose the local app startup path over the production-style `docker-compose.yml` image because the point of this stretch deliverable is to validate the same checked-out code reviewers will inspect, not just a prebuilt container. I also kept the workflow intentionally narrow by running the core MVP specs when `@smoke` tags are absent, avoiding a premature browser matrix or sharding strategy, and validating locally with YAML parsing, formatting checks, and a full serial Playwright run before treating the CI workflow as ready for GitHub-side verification. Once the first GitHub run exposed real failures, I treated that as a workflow-hardening exercise rather than assuming the initial draft was enough: I disabled `deploy.yml` auto-runs by moving it to `workflow_dispatch` only for this fork, replaced `pnpm/action-setup` with a simpler Node 24 plus Corepack activation path, and removed the premature `setup-node` cache hook that expected `pnpm` to exist too early. I then reworked the workflow so reviewers can inspect the CI run like a real SDET pipeline: setup is explicit, the environment phase verifies the DB and app readiness, the suite is listed before execution, Playwright logs stream with the `line` reporter, and the final summary reports total, passed, failed, flaky, and skipped counts instead of only a generic success or failure state. I also agreed with the structural cleanup point on the tests themselves: page objects should own page-level interactions, while repeated multi-step scenario setup such as board/list/card creation belongs in shared helpers or fixtures so future specs can reuse it without copying orchestration logic.
+I deliberately chose the local app startup path over the production-style `docker-compose.yml` image because the point of this work is to validate the same checked-out code reviewers will inspect, not just a prebuilt container. I also kept the workflow intentionally narrow by running the core MVP specs when `@smoke` tags are absent, avoiding a premature browser matrix or sharding strategy, and validating locally with YAML parsing, formatting checks, and a full serial Playwright run before treating the CI workflow as ready for GitHub-side verification. Once the first GitHub run exposed real failures, I treated that as a workflow-hardening exercise rather than assuming the initial draft was enough: I disabled `deploy.yml` auto-runs by moving it to `workflow_dispatch` only for this fork, replaced `pnpm/action-setup` with a simpler Node 24 plus Corepack activation path, and removed the premature `setup-node` cache hook that expected `pnpm` to exist too early. I then reworked the workflow so reviewers can inspect the CI run like a real SDET pipeline: setup is explicit, the environment phase verifies the DB and app readiness, the suite is listed before execution, Playwright logs stream with the `line` reporter, and the final summary reports total, passed, failed, flaky, and skipped counts instead of only a generic success or failure state. I also treated CI verification as part of responsible test-suite development rather than a deferrable extra, because once new specs start landing, immediate automated validation becomes part of maintaining trust in the suite. I agreed with the structural cleanup point on the tests themselves as well: page objects should own page-level interactions, while repeated multi-step scenario setup such as board/list/card creation belongs in shared helpers or fixtures so future specs can reuse it without copying orchestration logic.
 
 ---
 
@@ -255,15 +255,31 @@ I deliberately chose the local app startup path over the production-style `docke
 
 ### Prompt Used
 
-Reference the original take-home PDF and evaluate the completed branch against the assignment requirements to determine how well the submission meets the expected bar.
+Reference the original take-home PDF and evaluate the completed branch against the assignment requirements to determine how well the submission meets the expected bar. Distinguish clearly between required artifacts and stretch work so the final assessment does not over-credit optional improvements.
 
 ### AI Output Summary
 
-The agent decoded the one-page assignment PDF locally and extracted the core requirements: set up the chosen open-source project locally, identify one or two main features for E2E testing, develop a test plan with test cases, implement the cases using Playwright, and submit a branch containing the test plan, AI-agent markdown files, and Playwright tests. It then compared those requirements against the repository state and confirmed the presence of `TEST_PLAN.md`, `docs/ai-agent-notes.md`, four Playwright specs under `tests/e2e/specs`, shared helpers, and a working local validation path. It also noted that the CI workflow is a stretch deliverable that goes beyond the required submission set rather than substituting for any required artifact.
+The agent decoded the one-page assignment PDF locally and extracted the core requirements: set up the chosen open-source project locally, identify one or two main features for E2E testing, develop a test plan with test cases, implement the cases using Playwright, and submit a branch containing the test plan, AI-agent markdown files, and Playwright tests. It then compared those requirements against the repository state and confirmed the presence of `TEST_PLAN.md`, `docs/ai-agent-notes.md`, four Playwright specs under `tests/e2e/specs`, shared helpers, and a working local validation path. It also noted that the CI workflow goes beyond the literal minimum submission list while still being a sensible part of building and validating a growing automated test suite.
 
 ### My Decision
 
-I consider the branch above the stated requirement bar. The core ask is fully met with a focused feature selection, a detailed and code-aware test plan, implemented Playwright coverage, and explicit AI-agent documentation. The added CI workflow strengthens the submission as a senior-level stretch deliverable because it demonstrates maintainability, debuggability, and ownership beyond the minimum without diluting the original assignment scope.
+I consider the branch above the stated requirement bar. The core ask is fully met with a focused feature selection, a detailed and code-aware test plan, implemented Playwright coverage, and explicit AI-agent documentation. I no longer view the CI workflow simply as optional flourish; it is a practical integration point that makes the suite more credible and maintainable as additional tests are developed, while still going beyond the literal minimum assignment scope in a useful way.
+
+---
+
+## 19. Test Plan CI Integration Positioning
+
+### Prompt Used
+
+Update the test plan so it states clearly that GitHub Actions CI verification is part of the intended test-suite strategy. Treat CI integration as important for validating new tests as they are developed, not as work to defer until later.
+
+### AI Output Summary
+
+The agent reviewed the current `TEST_PLAN.md`, found that it still listed full CI pipeline design as out of scope, and corrected that framing. It updated the executive framing, goals, in-scope list, recommended automation files, and added a dedicated CI verification strategy section so the plan now presents GitHub Actions validation as part of responsible suite development rather than an optional afterthought.
+
+### My Decision
+
+I wanted the test plan to reflect how I actually judge automation quality: a useful suite should not rely only on local execution once multiple specs and helpers are in play. Keeping CI verification in scope makes the plan more honest about long-term test ownership and makes future additions to the suite easier to trust immediately.
 
 ---
 

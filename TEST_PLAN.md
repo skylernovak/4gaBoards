@@ -16,6 +16,8 @@ The selected features are:
 
 These are the strongest E2E candidates because they validate the core user value of 4gaBoards: creating workspaces, organizing work into boards/lists/cards, and moving cards through a workflow.
 
+In addition to the feature coverage itself, we decided to include a GitHub Actions workflow for CI verification of the Playwright suite. This is an important part of building a maintainable test suite because new or expanded tests should be validated automatically as they are developed, not deferred until later integration work.
+
 ## AI-Assisted Authoring Disclosure
 
 This test plan was developed with **OpenAI Codex** as an agentic development assistant. I used Codex to accelerate repository inspection, test-scope drafting, Playwright planning, and deliverable packaging, then refined the output to keep the final plan aligned with the actual 4gaBoards implementation and the expectations of a senior-level QA take-home submission.
@@ -50,6 +52,7 @@ Key implementation facts:
 - Validate that a user can open and edit card details.
 - Validate that a card can move through a workflow using the app's supported UI.
 - Validate that destructive card deletion behaves correctly.
+- Validate that the suite can run in GitHub Actions so future test additions receive immediate CI feedback.
 
 ### In Scope
 
@@ -64,6 +67,7 @@ Key implementation facts:
 - Card movement between lists.
 - Card deletion.
 - Persistence checks after refresh.
+- GitHub Actions CI verification for the Playwright suite using the checked-out application code.
 
 ### Out of Scope for MVP
 
@@ -74,10 +78,9 @@ Key implementation facts:
 - Full permissions and role-based access.
 - Visual regression testing.
 - Cross-browser matrix testing.
-- Full CI pipeline design.
 - Exhaustive task/checklist testing.
 
-These items are intentionally deferred to keep the take-home focused on robust, meaningful Playwright coverage rather than broad but brittle coverage.
+These items are intentionally deferred to keep the take-home focused on robust, meaningful Playwright coverage and a practical CI feedback loop rather than broad but brittle coverage.
 
 ## Assumptions
 
@@ -98,9 +101,23 @@ These items are intentionally deferred to keep the take-home focused on robust, 
 4gaBoards/tests/e2e/specs/card-lifecycle.spec.ts
 4gaBoards/tests/e2e/helpers/auth.ts
 4gaBoards/tests/e2e/helpers/testData.ts
+4gaBoards/.github/workflows/playwright.yml
 ```
 
 Optional lightweight page objects may be added only where they reduce duplication without hiding important assertions.
+
+## CI Verification Strategy
+
+The Playwright suite should be wired into GitHub Actions as part of this take-home branch, not treated as optional follow-up work. The reason is straightforward: once the suite exists, every additional spec, refactor, or selector hardening pass benefits from immediate automated verification in a clean environment.
+
+The CI workflow should:
+
+- install the pinned Node and `pnpm` toolchain used by the repo
+- start the local application and required database dependencies
+- run the current Playwright suite or designated smoke subset
+- publish Playwright artifacts and logs for debugging failed runs
+
+This is intentionally a practical CI verification layer, not a full enterprise pipeline redesign. The goal is to ensure the test suite remains runnable and reviewable as it grows.
 
 ## Test Data and Cleanup Strategy
 
