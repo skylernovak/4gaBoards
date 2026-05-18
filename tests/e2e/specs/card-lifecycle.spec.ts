@@ -1,68 +1,10 @@
-import { expect, Page, test } from '@playwright/test';
-import { loginAsAdmin } from '../helpers/auth';
+import { expect, test } from '@playwright/test';
+import { createBoardFixture, listWrapper } from '../helpers/boardFixture';
 import { uniqueName } from '../helpers/testData';
 
-const projectNamePlaceholder = 'Enter project name...';
-const boardNamePlaceholder = 'Enter board name...';
-const listNamePlaceholder = 'Enter list name...';
-const cardNamePlaceholder = 'Enter card name... [Ctrl+Enter] - open';
 const editCardNamePlaceholder = 'Enter card name...';
 const descriptionPlaceholder = 'Enter description...';
 const descriptionText = 'This card was created by Playwright to validate card detail persistence.';
-
-function xpathLiteral(value: string): string {
-  if (!value.includes("'")) {
-    return `'${value}'`;
-  }
-
-  if (!value.includes('"')) {
-    return `"${value}"`;
-  }
-
-  return `concat('${value.replace(/'/g, `', "'", '`)}')`;
-}
-
-function listWrapper(page: Page, listName: string) {
-  return page.locator(`xpath=//div[@title=${xpathLiteral(listName)}]/ancestor::div[contains(@class, 'List_outerWrapper')][1]`);
-}
-
-async function createBoardFixture(page: Page, projectName: string, boardName: string, listTodo: string, listInProgress: string, listDone: string, cardTitle: string) {
-  await page.goto('/login');
-  await loginAsAdmin(page);
-
-  await page.getByRole('button', { name: 'Add Project' }).last().click();
-  let dialog = page.getByRole('dialog');
-  await dialog.getByPlaceholder(projectNamePlaceholder).fill(projectName);
-  await dialog.getByRole('button', { name: 'Add Project' }).click();
-  await expect(page).toHaveURL(/\/projects\/[^/]+$/);
-
-  await page.getByRole('button', { name: 'Add Board' }).first().click();
-  dialog = page.getByRole('dialog');
-  await dialog.getByPlaceholder(boardNamePlaceholder).fill(boardName);
-  await dialog.getByRole('button', { name: 'Add Board' }).click();
-  await expect(page).toHaveURL(/\/boards\/[^/]+$/);
-
-  await page.getByRole('button', { name: /add list/i }).click();
-  const listNameField = page.getByPlaceholder(listNamePlaceholder);
-
-  await listNameField.fill(listTodo);
-  await listNameField.press('Enter');
-  await expect(page.locator(`div[title="${listTodo}"]`)).toBeVisible();
-
-  await listNameField.fill(listInProgress);
-  await listNameField.press('Enter');
-  await expect(page.locator(`div[title="${listInProgress}"]`)).toBeVisible();
-
-  await listNameField.fill(listDone);
-  await listNameField.press('Enter');
-  await expect(page.locator(`div[title="${listDone}"]`)).toBeVisible();
-
-  const todoList = listWrapper(page, listTodo);
-  await todoList.getByRole('button', { name: /add card/i }).click();
-  await todoList.getByPlaceholder(cardNamePlaceholder).fill(cardTitle);
-  await todoList.getByPlaceholder(cardNamePlaceholder).press('Enter');
-  await expect(todoList.locator(`div[title="${cardTitle}"]`)).toBeVisible();
-}
 
 test('admin user can open, edit, move, and delete a card', async ({ page }) => {
   const projectName = uniqueName('QE Lifecycle Project');

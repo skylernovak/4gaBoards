@@ -1,4 +1,5 @@
-import { expect, Page, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { listWrapper } from '../helpers/boardFixture';
 import { loginAsAdmin } from '../helpers/auth';
 import { uniqueName } from '../helpers/testData';
 
@@ -6,22 +7,6 @@ const projectNamePlaceholder = 'Enter project name...';
 const boardNamePlaceholder = 'Enter board name...';
 const listNamePlaceholder = 'Enter list name...';
 const cardNamePlaceholder = 'Enter card name... [Ctrl+Enter] - open';
-
-function xpathLiteral(value: string): string {
-  if (!value.includes("'")) {
-    return `'${value}'`;
-  }
-
-  if (!value.includes('"')) {
-    return `"${value}"`;
-  }
-
-  return `concat('${value.replace(/'/g, `', "'", '`)}')`;
-}
-
-function listWrapper(page: Page, listName: string) {
-  return page.locator(`xpath=//div[@title=${xpathLiteral(listName)}]/ancestor::div[contains(@class, 'List_outerWrapper')][1]`);
-}
 
 test('admin user can create project, board, lists, and card that persist after refresh', async ({ page }) => {
   const projectName = uniqueName('QE E2E Project');

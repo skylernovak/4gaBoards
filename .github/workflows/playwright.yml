@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   e2e-smoke:
-    name: E2E Smoke
+    name: 4gaBoards Playwright Tests
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -73,12 +73,12 @@ jobs:
             echo 'selection=@smoke-tagged Playwright tests' >> "$GITHUB_OUTPUT"
           else
             echo 'run_command<<EOF' >> "$GITHUB_OUTPUT"
-            echo 'pnpm -C tests exec playwright test e2e/specs/auth.spec.ts e2e/specs/board-creation.spec.ts e2e/specs/card-lifecycle.spec.ts --workers=1 --reporter=line,html,json' >> "$GITHUB_OUTPUT"
+            echo 'pnpm -C tests exec playwright test e2e/specs/addUser.spec.ts e2e/specs/auth.spec.ts e2e/specs/board-creation.spec.ts e2e/specs/card-lifecycle.spec.ts --workers=1 --reporter=line,html,json' >> "$GITHUB_OUTPUT"
             echo 'EOF' >> "$GITHUB_OUTPUT"
             echo 'list_command<<EOF' >> "$GITHUB_OUTPUT"
-            echo 'pnpm -C tests exec playwright test e2e/specs/auth.spec.ts e2e/specs/board-creation.spec.ts e2e/specs/card-lifecycle.spec.ts --workers=1 --list' >> "$GITHUB_OUTPUT"
+            echo 'pnpm -C tests exec playwright test e2e/specs/addUser.spec.ts e2e/specs/auth.spec.ts e2e/specs/board-creation.spec.ts e2e/specs/card-lifecycle.spec.ts --workers=1 --list' >> "$GITHUB_OUTPUT"
             echo 'EOF' >> "$GITHUB_OUTPUT"
-            echo 'selection=core MVP E2E specs (auth, board creation, card lifecycle)' >> "$GITHUB_OUTPUT"
+            echo 'selection=current Playwright E2E specs (add user, auth, board creation, card lifecycle)' >> "$GITHUB_OUTPUT"
           fi
 
       - name: 2. Environment | List targeted Playwright tests
