@@ -16,6 +16,10 @@ The selected features are:
 
 These are the strongest E2E candidates because they validate the core user value of 4gaBoards: creating workspaces, organizing work into boards/lists/cards, and moving cards through a workflow.
 
+## AI-Assisted Authoring Disclosure
+
+This test plan was developed with **OpenAI Codex** as an agentic development assistant. I used Codex to accelerate repository inspection, test-scope drafting, Playwright planning, and deliverable packaging, then refined the output to keep the final plan aligned with the actual 4gaBoards implementation and the expectations of a senior-level QA take-home submission.
+
 ## Codebase Context
 
 The current repository already contains a Playwright setup:

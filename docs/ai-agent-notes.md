@@ -296,3 +296,19 @@ The agent reviewed the repository state, confirmed the branch was already clean 
 ### My Decision
 
 I wanted the deliverable to be reviewable from the repository itself rather than forcing the reviewer to infer which local AI-agent assets mattered. The right packaging choice was to keep the branch focused on the markdown artifacts that actually governed or documented the work, explicitly point to the MCP coverage already captured in these notes, and snapshot the custom project skill that was authored for this take-home rather than trying to vendor every third-party skill bundle into the repo.
+
+---
+
+## 18. Test Plan AI Tooling Disclosure
+
+### Prompt Used
+
+Update the test plan so it clearly states that OpenAI Codex was used to facilitate agentic development for this take-home deliverable.
+
+### AI Output Summary
+
+The agent reviewed `TEST_PLAN.md`, found that the executive summary already required AI-agent usage to be documented, and added a dedicated disclosure section near the top of the document rather than burying the tooling note inside implementation details. The new text states that OpenAI Codex was used as an agentic development assistant for repository inspection, test-scope drafting, Playwright planning, and deliverable packaging, while making clear that the final plan was still refined against the actual application and submission bar.
+
+### My Decision
+
+I wanted the AI tooling disclosure to be explicit and easy for a reviewer to find without weakening the core QA content of the plan. A short, high-level disclosure near the top is the right balance because it acknowledges how Codex was used while keeping the rest of the document focused on test strategy and implementation quality.
